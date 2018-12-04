@@ -4,23 +4,27 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.serena.rlc</groupId>
-    <artifactId>rlc-ansible-provider</artifactId>
-    <version>6.1.0.0-SNAPSHOT</version>
+    <artifactId>rlc-provider-ansible-tower</artifactId>
+    <version>1.0-SNAPSHOT</version>
 
     <name>Serena RLC Ansible Tower Provider</name>
     <url>http://www.serena.com</url>
 
 	<properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <rlc.version>6.1.0.0-SNAPSHOT</rlc.version>
+        <rlc.version>6.2.3.0-SNAPSHOT</rlc.version>
+        <rlc-provider-spi.version>6.2.3.0-SNAPSHOT</rlc-provider-spi.version>
         <rlc.file.repository>${project.basedir}/rlc-local-repository/</rlc.file.repository>
         <java.version>1.8</java.version>
-        <provider.java.version>1.7</provider.java.version>
+        <provider.java.version>1.7.5</provider.java.version>
+        <org.slf4j.version>1.7.5</org.slf4j.version>
+        <commons-lang3.version>3.1</commons-lang3.version>
+
         <spring.version>4.1.9.RELEASE</spring.version>
         <!--spring.security.version>4.0.0.RELEASE</spring.security.version-->
         <!--cxf.version>3.0.1</cxf.version-->
         <!--com.fasterxml.jackson.version>2.3.0</com.fasterxml.jackson.version-->
-        <org.slf4j.version>1.7.12</org.slf4j.version>
+        <!--org.slf4j.version>1.7.12</org.slf4j.version-->
         <!--log4j.version>1.2.17</log4j.version-->
         <junit.version>4.11</junit.version>
         <!--testng.version>6.1.1</testng.version-->
@@ -51,8 +55,8 @@
     <dependencies>
         <dependency>
             <groupId>com.serena.rlc</groupId>
-            <artifactId>rlc-provider-common</artifactId>
-            <version>${rlc.version}</version>
+            <artifactId>rlc-provider-spi</artifactId>
+            <version>${rlc-provider-spi.version}</version>
             <scope>compile</scope>
         </dependency>
 
@@ -153,6 +157,18 @@
             <artifactId>json-simple</artifactId>
             <version>${json-simple.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.7.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>1.23</version>
+        </dependency>
     </dependencies>
 	
 	<repositories>
@@ -193,29 +209,40 @@
                 <artifactId>maven-compiler-plugin</artifactId>
 				<version>3.5.1</version>
                 <configuration>
-                    <showDeprecation>true</showDeprecation>
-                    <showWarnings>true</showWarnings>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
                 </configuration>
             </plugin>
             <plugin>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>2.4</version>
+                <version>3.0.2</version>
                 <configuration>
                     <archive>
-                        <!--  Don't add Maven descriptor to the JAR  -->
                         <addMavenDescriptor>false</addMavenDescriptor>
                         <manifest>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                         <manifestEntries>
+                            <Minimum-RLC-Version>6.2.0</Minimum-RLC-Version>
                             <Build-Timestamp>${maven.build.timestamp}</Build-Timestamp>
+                            <Plugin-Name>rlc-provider-ansible</Plugin-Name>
+                            <Plugin-Version>1.0</Plugin-Version>
+                            <Plugin-Display-Name>Ansible Tower</Plugin-Display-Name>
+                            <Plugin-Description>Enables you to run Ansible Tower jobs from Release Control.</Plugin-Description>
+                            <Plugin-Info>See &lt;a href=&quot;https://github.com/rlc-community-providers/rlc-ansible-provider&quot;&gt;Github repository&lt;/a&gt; for more information.</Plugin-Info>
+                            <Root-Context>serena-provider-ansible-1_0.xml</Root-Context>
+                            <All-Context-List>serena-provider-ansible-1_0.xml</All-Context-List>
+                            <Notify-Context>serena-provider-ansible-1_0.xml</Notify-Context>
                         </manifestEntries>
                     </archive>
+                    <!-- Don't want Dimensions CM metadata in JAR -->
+                    <excludes>
+                        <exclude>**/.dm</exclude>
+                        <exclude>**/.dm/**</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
-            <plugin>
+            <!--plugin>
                 <artifactId>maven-source-plugin</artifactId>
                 <version>2.2.1</version>
                 <executions>
@@ -234,7 +261,7 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
+            </plugin-->
         </plugins>
     </build>
 </project>

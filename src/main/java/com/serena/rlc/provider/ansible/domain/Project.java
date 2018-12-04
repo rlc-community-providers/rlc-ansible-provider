@@ -96,29 +96,23 @@ import java.util.List;
 
 
 /**
- * Ansible Tower Job POJO
+ * Ansible Tower Project POJO
  * @author kevin.lee@microfocus.com
  */
-public class Job {
+public class Project {
     private static final long serialVersionUID = 1L;
 
-    private final static Logger logger = LoggerFactory.getLogger(Job.class);
+    private final static Logger logger = LoggerFactory.getLogger(Project.class);
 
     private Long id;
     private String name;
     private String url;
     private String description;
-    private String playbook;
-    private Long project;
-    private Long inventory;
-    private String limit;
-    private String extraVars;
-    private String jobTags;
     private String status;
-    private List<Job> jobs;
+    private List<JobTemplate> jobTemplates;
 
-    public Job(){}
-    public Job(Long id, String name) {
+    public Project(){}
+    public Project(Long id, String name) {
         this.id = id;
         this.name = name;
     }
@@ -155,54 +149,6 @@ public class Job {
         this.description = description;
     }
 
-    public String getPlaybook() {
-        return playbook;
-    }
-
-    public void setPlaybook(String playbook) {
-        this.playbook = playbook;
-    }
-
-    public Long getProject() {
-        return project;
-    }
-
-    public void setProject(Long project) {
-        this.project = project;
-    }
-
-    public Long getInventory() {
-        return inventory;
-    }
-
-    public void setInventory(Long inventory) {
-        this.inventory = inventory;
-    }
-
-    public String getLimit() {
-        return limit;
-    }
-
-    public void setLimit(String limit) {
-        this.limit = limit;
-    }
-
-    public String getExtraVars() {
-        return extraVars;
-    }
-
-    public void setExtraVars(String extraVars) {
-        this.extraVars = extraVars;
-    }
-
-    public String getJobTags() {
-        return jobTags;
-    }
-
-    public void setJobTags(String jobTags) {
-        this.jobTags = jobTags;
-    }
-
     public String getStatus() {
         return status;
     }
@@ -211,48 +157,48 @@ public class Job {
         this.status = status;
     }
 
-    public List<Job> getJobs() {
-        return jobs;
+    public List<JobTemplate> getJobTemplates() {
+        return jobTemplates;
     }
 
-    public void setJobs(List<Job> jobs) {
-        this.jobs = jobs;
+    public void setJobTemplates(List<JobTemplate> jobTemplates) {
+        this.jobTemplates = jobTemplates;
     }
 
-    public static Long parseJobResult(String options) {
-        Long job = 0L;
+    public static Long parseJobTemplateResult(String options) {
+        Long jobTemplate = 0L;
         JSONParser parser = new JSONParser();
         try {
             Object parsedObject = parser.parse(options);
             JSONObject jsonObject = (JSONObject) parsedObject;
-            job = (Long) jsonObject.get("job");
+            jobTemplate = (Long) jsonObject.get("jobTemplate");
         } catch (ParseException e) {
             logger.error("Error while parsing input JSON - " + options, e);
         }
-        return job;
+        return jobTemplate;
     }
 
-    public static Job parseSingle(String options) {
+    public static Project parseSingle(String options) {
         JSONParser parser = new JSONParser();
         try {
             Object parsedObject = parser.parse(options);
             JSONObject jsonObject = (JSONObject) parsedObject;
-            Job jobTemplate = parseSingle(jsonObject);
-            return jobTemplate;
+            Project project = parseSingle(jsonObject);
+            return project;
         } catch (ParseException e) {
             logger.error("Error while parsing input JSON - " + options, e);
         }
         return null;
     }
 
-    public static List<Job> parse(String options) {
-        List<Job> list = new ArrayList<>();
+    public static List<Project> parse(String options) {
+        List<Project> list = new ArrayList<>();
         JSONParser parser = new JSONParser();
         try {
             Object parsedObject = parser.parse(options);
             JSONArray array = (JSONArray) ((JSONObject) parsedObject).get("results");
             for (Object object : array) {
-                Job obj = parseSingle((JSONObject) object);
+                Project obj = parseSingle((JSONObject) object);
                 list.add(obj);
             }
         } catch (ParseException e) {
@@ -262,19 +208,13 @@ public class Job {
         return list;
     }
 
-    public static Job parseSingle(JSONObject jsonObject) {
-        Job obj = new Job();
+    public static Project parseSingle(JSONObject jsonObject) {
+        Project obj = new Project();
         if (jsonObject != null) {
             obj.setId((Long) jsonObject.get("id"));
             obj.setName((String) jsonObject.get("name"));
             obj.setUrl((String) jsonObject.get("url"));
             obj.setDescription((String) jsonObject.get("description"));
-            obj.setPlaybook((String) jsonObject.get("playbook"));
-            obj.setProject((Long) jsonObject.get("project"));
-            obj.setInventory((Long) jsonObject.get("inventory"));
-            obj.setLimit((String) jsonObject.get("limit"));
-            obj.setExtraVars((String) jsonObject.get("extra_vars"));
-            obj.setJobTags((String) jsonObject.get("job_tags"));
             obj.setStatus((String) jsonObject.get("status"));
         }
         return obj;
@@ -282,7 +222,7 @@ public class Job {
 
     @Override
     public String toString() {
-        return "Job{" + "id=" + id + ", name=" + name + '}';
+        return "Project{" + "id=" + id + ", name=" + name + '}';
     }
     
     

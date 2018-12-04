@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<providerSpecifications>
+    <providerDescription>Ansible Tower plugin</providerDescription>
+    <providerSpecifications>
+        <providerKey>executionProvider</providerKey>
+        <internalName>ansibleTowerExecution</internalName>
+        <name>Ansible Tower Actions</name>
+        <description>Ansible Tower execution provider</description>
+        <contextName>serena-provider-ansible-1_0.xml</contextName>
+        <order>1</order>
+        <canValidate>true</canValidate>
+    </providerSpecifications>
+    <baseProviderSpecification>
+        <providerKey>executionProvider</providerKey>
+        <canValidate>true</canValidate>
+    </baseProviderSpecification>
+</providerSpecifications>

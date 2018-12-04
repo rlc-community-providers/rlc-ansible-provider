@@ -1,17 +1,93 @@
-/*
+/* ===========================================================================
+ *  Copyright (c) 2018 Micro Focus. All rights reserved.
  *
- * Copyright (c) 2016 SERENA Software, Inc. All Rights Reserved.
+ *  Use of the Sample Code provided by Micro Focus is governed by the following
+ *  terms and conditions. By using the Sample Code, you agree to be bound by
+ *  the terms contained herein. If you do not agree to the terms herein, do
+ *  not install, copy, or use the Sample Code.
  *
- * This software is proprietary information of SERENA Software, Inc.
- * Use is subject to license terms.
+ *  1.  GRANT OF LICENSE.  Subject to the terms and conditions herein, you
+ *  shall have the nonexclusive, nontransferable right to use the Sample Code
+ *  for the sole purpose of developing applications for use solely with the
+ *  Micro Focus software product(s) that you have licensed separately from Micro Focus.
+ *  Such applications shall be for your internal use only.  You further agree
+ *  that you will not: (a) sell, market, or distribute any copies of the
+ *  Sample Code or any derivatives or components thereof; (b) use the Sample
+ *  Code or any derivatives thereof for any commercial purpose; or (c) assign
+ *  or transfer rights to the Sample Code or any derivatives thereof.
  *
- * @author Kevin Lee
+ *  2.  DISCLAIMER OF WARRANTIES.  TO THE MAXIMUM EXTENT PERMITTED BY
+ *  APPLICABLE LAW, SERENA PROVIDES THE SAMPLE CODE AS IS AND WITH ALL
+ *  FAULTS, AND HEREBY DISCLAIMS ALL WARRANTIES AND CONDITIONS, EITHER
+ *  EXPRESSED, IMPLIED OR STATUTORY, INCLUDING, BUT NOT LIMITED TO, ANY
+ *  IMPLIED WARRANTIES OR CONDITIONS OF MERCHANTABILITY, OF FITNESS FOR A
+ *  PARTICULAR PURPOSE, OF LACK OF VIRUSES, OF RESULTS, AND OF LACK OF
+ *  NEGLIGENCE OR LACK OF WORKMANLIKE EFFORT, CONDITION OF TITLE, QUIET
+ *  ENJOYMENT, OR NON-INFRINGEMENT.  THE ENTIRE RISK AS TO THE QUALITY OF
+ *  OR ARISING OUT OF USE OR PERFORMANCE OF THE SAMPLE CODE, IF ANY,
+ *  REMAINS WITH YOU.
+ *
+ *  3.  EXCLUSION OF DAMAGES.  TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE
+ *  LAW, YOU AGREE THAT IN CONSIDERATION FOR RECEIVING THE SAMPLE CODE AT NO
+ *  CHARGE TO YOU, SERENA SHALL NOT BE LIABLE FOR ANY DAMAGES WHATSOEVER,
+ *  INCLUDING BUT NOT LIMITED TO DIRECT, SPECIAL, INCIDENTAL, INDIRECT, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, DAMAGES FOR LOSS OF
+ *  PROFITS OR CONFIDENTIAL OR OTHER INFORMATION, FOR BUSINESS INTERRUPTION,
+ *  FOR PERSONAL INJURY, FOR LOSS OF PRIVACY, FOR NEGLIGENCE, AND FOR ANY
+ *  OTHER LOSS WHATSOEVER) ARISING OUT OF OR IN ANY WAY RELATED TO THE USE
+ *  OF OR INABILITY TO USE THE SAMPLE CODE, EVEN IN THE EVENT OF THE FAULT,
+ *  TORT (INCLUDING NEGLIGENCE), STRICT LIABILITY, OR BREACH OF CONTRACT,
+ *  EVEN IF SERENA HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.  THE
+ *  FOREGOING LIMITATIONS, EXCLUSIONS AND DISCLAIMERS SHALL APPLY TO THE
+ *  MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW.  NOTWITHSTANDING THE ABOVE,
+ *  IN NO EVENT SHALL SERENA'S LIABILITY UNDER THIS AGREEMENT OR WITH RESPECT
+ *  TO YOUR USE OF THE SAMPLE CODE AND DERIVATIVES THEREOF EXCEED US$10.00.
+ *
+ *  4.  INDEMNIFICATION. You hereby agree to defend, indemnify and hold
+ *  harmless Micro Focus from and against any and all liability, loss or claim
+ *  arising from this agreement or from (i) your license of, use of or
+ *  reliance upon the Sample Code or any related documentation or materials,
+ *  or (ii) your development, use or reliance upon any eventId or
+ *  derivative work created from the Sample Code.
+ *
+ *  5.  TERMINATION OF THE LICENSE.  This agreement and the underlying
+ *  license granted hereby shall terminate if and when your license to the
+ *  applicable Micro Focus software product terminates or if you breach any terms
+ *  and conditions of this agreement.
+ *
+ *  6.  CONFIDENTIALITY.  The Sample Code and all information relating to the
+ *  Sample Code (collectively "Confidential Information") are the
+ *  confidential information of Micro Focus.  You agree to maintain the
+ *  Confidential Information in strict confidence for Micro Focus.  You agree not
+ *  to disclose or duplicate, nor allow to be disclosed or duplicated, any
+ *  Confidential Information, in whole or in part, except as permitted in
+ *  this Agreement.  You shall take all reasonable steps necessary to ensure
+ *  that the Confidential Information is not made available or disclosed by
+ *  you or by your employees to any other person, firm, or corporation.  You
+ *  agree that all authorized persons having access to the Confidential
+ *  Information shall observe and perform under this nondisclosure covenant.
+ *  You agree to immediately notify Micro Focus of any unauthorized access to or
+ *  possession of the Confidential Information.
+ *
+ *  7.  AFFILIATES.  Micro Focus as used herein shall refer to Micro Focus,
+ *  and its affiliates.  An entity shall be considered to be an
+ *  affiliate of Micro Focus if it is an entity that controls, is controlled by,
+ *  or is under common control with Micro Focus.
+ *
+ *  8.  GENERAL.  Title and full ownership rights to the Sample Code,
+ *  including any derivative works shall remain with Micro Focus.  If a court of
+ *  competent jurisdiction holds any provision of this agreement illegal or
+ *  otherwise unenforceable, that provision shall be severed and the
+ *  remainder of the agreement shall remain in full force and effect.
+ * ===========================================================================
  */
+
 package com.serena.rlc.provider.ansible.client;
 
 import com.serena.rlc.provider.ansible.domain.Job;
 import com.serena.rlc.provider.ansible.domain.JobTemplate;
-import com.serena.rlc.provider.ansible.exception.AnsibleClientException;
+import com.serena.rlc.provider.ansible.domain.Project;
+import com.serena.rlc.provider.ansible.exception.AnsibleTowerClientException;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHeaders;
@@ -29,13 +105,12 @@ import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.PoolingClientConnectionManager;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.yaml.snakeyaml.Yaml;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -48,11 +123,11 @@ import java.util.*;
 
 /**
  * Ansible Tower Client
- * @author klee@serena.com
+ * @author kevin.lee@microfocus.com
  */
 @Component
-public class AnsibleClient {
-    private static final Logger logger = LoggerFactory.getLogger(AnsibleClient.class);
+public class AnsibleTowerClient {
+    private static final Logger logger = LoggerFactory.getLogger(AnsibleTowerClient.class);
 
     public static String DEFAULT_HTTP_CONTENT_TYPE = "application/json";
 
@@ -64,13 +139,14 @@ public class AnsibleClient {
 
     private DefaultHttpClient httpClient;
     private HttpHost httpHost = null;
+    private int ansiblePort = 443;
 
 
-    public AnsibleClient() {
+    public AnsibleTowerClient() {
 
     }
     
-    public AnsibleClient(String url, String apiVersion, String username, String password) throws AnsibleClientException{
+    public AnsibleTowerClient(String url, String apiVersion, String username, String password) throws AnsibleTowerClientException {
         this.ansibleUrl = url;
         this.apiVersion = apiVersion;
         this.ansibleUsername = username;
@@ -118,16 +194,17 @@ public class AnsibleClient {
         this.ansibleToken = ansibleToken;
     }
 
+
     /**
      * Create a new connection to Ansible, storing the authentication toke for future calls.
      *
      * @param url  the url to Ansible, e.g. https://servername
      * @param username  the username of the Ansible user
      * @param password  the password of the Ansible user
-     * @throws AnsibleClientException
+     * @throws AnsibleTowerClientException
      */
-    public void createConnection(String url, String apiVersion, String username, String password) throws AnsibleClientException {
-        // create an acceptingTrustStrategy to accept all connections - insecure but flexible
+    public void createConnection(String url, String apiVersion, String username, String password) throws AnsibleTowerClientException {
+        // create an acceptingTrustStrategy to accept all connections - less secure but flexible
         TrustStrategy acceptingTrustStrategy = new TrustStrategy() {
             @Override
             public boolean isTrusted(X509Certificate[] certificate, String authType) {
@@ -140,43 +217,81 @@ public class AnsibleClient {
                     SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
         } catch (Exception ex) {
             logger.error(ex.getMessage(), ex);
-            throw new AnsibleClientException("Unable to create SSL Socket Factory", ex);
+            throw new AnsibleTowerClientException("Unable to create SSL Socket Factory", ex);
 
         }
-        SchemeRegistry registry = new SchemeRegistry();
-        registry.register(new Scheme("https", 443, sf));
-        ClientConnectionManager ccm = new PoolingClientConnectionManager(registry);
 
         this.ansibleUrl = url;
         this.ansibleUsername = username;
         this.ansiblePassword = password;
         this.apiVersion = apiVersion;
-        this.httpClient = new DefaultHttpClient(ccm);
         String[] urlParts = this.ansibleUrl.split(":");
         if (urlParts.length > 2) {
-            this.httpHost = new HttpHost(urlParts[1].replaceAll("/",""), Integer.parseInt(urlParts[2]), urlParts[0]);
+            ansiblePort = Integer.parseInt(urlParts[2]);
+            this.httpHost = new HttpHost(urlParts[1].replaceAll("/",""), ansiblePort , urlParts[0]);
         } else {
-            this.httpHost = new HttpHost(urlParts[1].replaceAll("/", ""), 443, urlParts[0]);
+            if (urlParts[0].equals("https"))
+                ansiblePort = 443;
+            else
+                ansiblePort = 80;
+            this.httpHost = new HttpHost(urlParts[1].replaceAll("/", ""), ansiblePort, urlParts[0]);
         }
+        SchemeRegistry registry = new SchemeRegistry();
+        registry.register(new Scheme(urlParts[0], ansiblePort, sf));
+        ClientConnectionManager ccm = new PoolingClientConnectionManager(registry);
+        this.httpClient = new DefaultHttpClient(ccm);
         this.httpClient.getParams().setParameter(ClientPNames.DEFAULT_HOST, httpHost);
 
         try {
             this.ansibleToken = getAuthToken();
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            throw new AnsibleClientException("Unable to retrieve authentication token", e);
+            throw new AnsibleTowerClientException("Unable to retrieve authentication token", e);
         }
     }
 
     /**
-     * Get a list of all the Job Templates
-     * @return a list of JobTemplate objects
-     * @throws AnsibleClientException
+     * Get a list of all the Projects
+     * @return a list of Project objects
+     * @throws AnsibleTowerClientException
      */
-    public List<JobTemplate> getJobTemplates() throws AnsibleClientException {
-        logger.debug("Retrieving Ansible Job Templates");
+    public List<Project> getProjects() throws AnsibleTowerClientException {
+        logger.debug("Retrieving Ansible Projects");
+
+        String projResponse = processGet(getAnsibleUrl(), "/projects/");
+        logger.debug(projResponse);
+
+        List<Project> projTemplates = Project.parse(projResponse);
+        return projTemplates;
+    }
+
+    /**
+     * Get the details of a specific Job Template
+     * @param jobTemplateId  the id of the Job Template to retrieve
+     * @return a Job Template
+     * @throws AnsibleTowerClientException
+     */
+    public JobTemplate getJobTemplate(Long jobTemplateId) throws AnsibleTowerClientException {
+        logger.debug("Retrieving Ansible Job Template id: {}", jobTemplateId);
+
+        String result = processGet(getAnsibleUrl(), "/job_templates/"+jobTemplateId.toString()+"/");
+        System.out.println(result);
+        JobTemplate jobTemplate = JobTemplate.parseSingle(result);
+        logger.debug("Found Ansible Job Template: \"{}\"", jobTemplate.getName());
+
+        return jobTemplate;
+    }
+
+    /**
+     * Get a list of all the Job Templates
+     * @param projectId  the project to get the templates for
+     * @return a list of JobTemplate objects
+     * @throws AnsibleTowerClientException
+     */
+    public List<JobTemplate> getJobTemplates(Long projectId) throws AnsibleTowerClientException {
+        logger.debug("Retrieving Ansible Job Templates for project id: {}" , projectId);
         
-        String jobsResponse = processGet(getAnsibleUrl(), "/job_templates/");
+        String jobsResponse = processGet(getAnsibleUrl(), "/job_templates/?project__id="+projectId.toString());
         logger.debug(jobsResponse);
 
         List<JobTemplate> jobTemplates = JobTemplate.parse(jobsResponse);
@@ -188,13 +303,14 @@ public class AnsibleClient {
      * @param jobTemplateId  the id of the job template
      * @param templateData  any additional data to send with the request
      * @return the Job that was started as a result of the request
-     * @throws AnsibleClientException
+     * @throws AnsibleTowerClientException
      */
-    public Job launchJob(Long jobTemplateId, String templateData) throws AnsibleClientException {
+    public Job launchJob(Long jobTemplateId, String templateData) throws AnsibleTowerClientException {
         logger.debug("Launching Ansible Job from Job Template id: {} with data: {}", jobTemplateId, templateData);
 
         // TODO: pass templateData to Post
         String result = processPost(getAnsibleUrl(), "/job_templates/"+jobTemplateId.toString()+"/launch/", templateData);
+        System.out.println(result);
         Long jobId = Job.parseJobResult(result);
         logger.debug("Successfully launched Ansible Job id: {}", jobId);
 
@@ -206,12 +322,13 @@ public class AnsibleClient {
      * Get the details of a specific Job
      * @param jobId  the id of the Job to retrieve
      * @return a Job
-     * @throws AnsibleClientException
+     * @throws AnsibleTowerClientException
      */
-    public Job getJob(Long jobId) throws AnsibleClientException {
+    public Job getJob(Long jobId) throws AnsibleTowerClientException {
         logger.debug("Retrieving Ansible Job id: {}", jobId);
 
         String result = processGet(getAnsibleUrl(), "/jobs/"+jobId.toString()+"/");
+        System.out.println(result);
         Job job = Job.parseSingle(result);
         logger.debug("Found Ansible Job: \"{}\"", job.getName());
 
@@ -222,12 +339,13 @@ public class AnsibleClient {
      * Get the status of a specific Job
      * @param jobId  the id of the Job to retrieve
      * @return  a String containing the status of the Job
-     * @throws AnsibleClientException
+     * @throws AnsibleTowerClientException
      */
-    public String getJobStatus(Long jobId) throws AnsibleClientException {
+    public String getJobStatus(Long jobId) throws AnsibleTowerClientException {
         logger.debug("Retrieving status of Ansible Job id: {}", jobId);
 
         String result = processGet(getAnsibleUrl(), "/jobs/"+jobId.toString()+"/");
+        System.out.println(result);
         Job job = Job.parseSingle(result);
 
         logger.debug("Found Ansible Job: \"{}\" with status \"{}\"", job.getName(), job.getStatus());
@@ -242,9 +360,9 @@ public class AnsibleClient {
     /**
      * Login to ansible and retrieve an authentication token for subsequent calls.
      * @return an Ansible authentication token
-     * @throws AnsibleClientException, IOException, GeneralSecurityException
+     * @throws AnsibleTowerClientException, IOException, GeneralSecurityException
      */
-    public String getAuthToken() throws AnsibleClientException, IOException, GeneralSecurityException {
+    public String getAuthToken() throws AnsibleTowerClientException, IOException, GeneralSecurityException {
         String uri = createUrl(getAnsibleUrl(), "/authtoken/");
         String postData = null;
 
@@ -291,7 +409,7 @@ public class AnsibleClient {
 
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            throw new AnsibleClientException("Server not available", e);
+            throw new AnsibleTowerClientException("Server not available", e);
         }
 
         return null;
@@ -303,9 +421,9 @@ public class AnsibleClient {
      * @param ansibleUrl  the URL to Ansible
      * @param getPath  the path for the specific request
      * @return String containing the response body
-     * @throws AnsibleClientException
+     * @throws AnsibleTowerClientException
      */
-    public String processGet(String ansibleUrl, String getPath) throws AnsibleClientException {
+    public String processGet(String ansibleUrl, String getPath) throws AnsibleTowerClientException {
         String uri = createUrl(ansibleUrl, getPath);
         String token = getAnsibleToken();
         if (token == null || StringUtils.isEmpty(token)) {
@@ -313,7 +431,7 @@ public class AnsibleClient {
                 token = getAuthToken();
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
-                throw new AnsibleClientException("Unable to retrieve authentication token", e);
+                throw new AnsibleTowerClientException("Unable to retrieve authentication token", e);
             }
         }
 
@@ -323,16 +441,16 @@ public class AnsibleClient {
         
         getRequest.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
         getRequest.addHeader(HttpHeaders.ACCEPT, "application/json");
-        //Authorization: Token 8f17825cf08a7efea124f2638f3896f6637f8745
-        getRequest.addHeader(HttpHeaders.AUTHORIZATION, "token " + token);
+        getRequest.addHeader(HttpHeaders.AUTHORIZATION, "Token " + token);
         String result = "";
+
+        System.out.println(getRequest.toString());
 
         try {
             HttpResponse response = httpClient.execute(getRequest);
             if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
                 throw createHttpError(response);
             }
-
             BufferedReader br = new BufferedReader(new InputStreamReader((response.getEntity().getContent())));
             StringBuilder sb = new StringBuilder(1024);
             String output;
@@ -342,7 +460,7 @@ public class AnsibleClient {
             result = sb.toString();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            throw new AnsibleClientException("Server not available", e);
+            throw new AnsibleTowerClientException("Server not available", e);
         }
 
         logger.debug("End executing Ansible GET request to url=\"{}\" and received this result={}", uri, result);
@@ -357,9 +475,9 @@ public class AnsibleClient {
      * @param postPath  the path for the specific request
      * @param postBody the data to send with the request
      * @return String containing the response body
-     * @throws AnsibleClientException
+     * @throws AnsibleTowerClientException
      */
-    public String processPost(String ansibleUrl, String postPath, String postBody) throws AnsibleClientException {
+    public String processPost(String ansibleUrl, String postPath, String postBody) throws AnsibleTowerClientException {
         String uri = createUrl(ansibleUrl, postPath);
         String token = getAnsibleToken();
         if (token == null || StringUtils.isEmpty(token)) {
@@ -367,7 +485,7 @@ public class AnsibleClient {
                 token = getAuthToken();
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
-                throw new AnsibleClientException("Unable to retrieve authentication token", e);
+                throw new AnsibleTowerClientException("Unable to retrieve authentication token", e);
             }
         }
 
@@ -376,12 +494,12 @@ public class AnsibleClient {
         HttpPost postRequest = new HttpPost(uri);
         postRequest.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
         postRequest.addHeader(HttpHeaders.ACCEPT, "application/json");
-        postRequest.addHeader(HttpHeaders.AUTHORIZATION, "token " + token);
+        postRequest.addHeader(HttpHeaders.AUTHORIZATION, "Token " + token);
         try {
             postRequest.setEntity(new StringEntity(postBody,"UTF-8"));
         } catch (UnsupportedEncodingException e) {
             logger.error(e.getMessage(), e);
-            throw new AnsibleClientException("Error creating body for POST request", e);
+            throw new AnsibleTowerClientException("Error creating body for POST request", e);
         }
         String result = "";
 
@@ -401,7 +519,7 @@ public class AnsibleClient {
             result = sb.toString();
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
-            throw new AnsibleClientException("Server not available", e);
+            throw new AnsibleTowerClientException("Server not available", e);
         }
 
         logger.debug("End executing Ansible POST request to url=\"{}\" and received this result={}", uri, result);
@@ -438,9 +556,9 @@ public class AnsibleClient {
     /**
      * Create a formatted Ansible error and message from a HTTP response
      * @param response  the response to parse
-     * @return AnsibleClientException
+     * @return AnsibleTowerClientException
      */
-    private AnsibleClientException createHttpError(HttpResponse response) {
+    private AnsibleTowerClientException createHttpError(HttpResponse response) {
         String message;
         try {
             StatusLine statusLine = response.getStatusLine();
@@ -457,24 +575,24 @@ public class AnsibleClient {
             logger.info(message);
 
             if (new Integer(HttpStatus.SC_UNAUTHORIZED).equals(statusLine.getStatusCode())) {
-                return new AnsibleClientException("Ansible: Invalid credentials provided.");
+                return new AnsibleTowerClientException("Ansible: Invalid credentials provided.");
             } else if (new Integer(HttpStatus.SC_NOT_FOUND).equals(statusLine.getStatusCode())) {
-                return new AnsibleClientException("Ansible: Request URL not found.");
+                return new AnsibleTowerClientException("Ansible: Request URL not found.");
             } else if (new Integer(HttpStatus.SC_BAD_REQUEST).equals(statusLine.getStatusCode())) {
-                return new AnsibleClientException("Ansible: Bad request. " + responsePayload);
+                return new AnsibleTowerClientException("Ansible: Bad request. " + responsePayload);
             }
         } catch (IOException e) {
-            return new AnsibleClientException("Ansible: Can't read response");
+            return new AnsibleTowerClientException("Ansible: Can't read response");
         }
 
-        return new AnsibleClientException(message);
+        return new AnsibleTowerClientException(message);
     }
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-    static public void main(String[] args) throws AnsibleClientException {
+    static public void main(String[] args) throws AnsibleTowerClientException {
 
         /*
         // prompt for and iterate over extra_vars, e.g. "extra_vars": "{\"username\": \"admin\", \"environment\": \"test\", \"password\": \"password\"}",
@@ -495,9 +613,11 @@ public class AnsibleClient {
         }
         System.exit(0);*/
 
+        Project firstPrj = null;
         JobTemplate firstJt = null;
 
-        AnsibleClient ac = new AnsibleClient("https://ec2-54-194-87-69.eu-west-1.compute.amazonaws.com", "v1", "admin", "Pa55w0rd");
+        AnsibleTowerClient ac = new AnsibleTowerClient("https://ec2-18-130-248-121.eu-west-2.compute.amazonaws.com", "v2", "admin", "");
+
         String response = null;
         try {
             response = ac.getAuthToken();
@@ -506,14 +626,30 @@ public class AnsibleClient {
         }
         System.out.println("Authentication token: " + response);
 
-        List<JobTemplate> jts = ac.getJobTemplates();
+        List<Project> prjs = ac.getProjects();
+        for (Project prj: prjs) {
+            if (firstPrj == null) firstPrj = prj;
+            System.out.println("Found Project " + prj.getId() + " - " + prj.getName());
+            System.out.println("URL: " + prj.getUrl());
+            System.out.println("Description: " + prj.getDescription());
+
+        }
+        List<JobTemplate> jts = ac.getJobTemplates(firstPrj.getId());
         for (JobTemplate jt: jts) {
             if (firstJt == null) firstJt = jt;
             System.out.println("Found Job Template " + jt.getId() + " - " + jt.getName());
             System.out.println("URL: " + jt.getUrl());
             System.out.println("Description: " + jt.getDescription());
-        }
+            System.out.println("Extra Vars: " + jt.getExtraVars());
 
+            Yaml yaml = new Yaml();
+            Map<Object, Object> document = yaml.load(jt.getExtraVars());
+            for (Map.Entry<Object, Object> entry : document.entrySet()) {
+                System.out.println(entry.getKey() + ":" + entry.getValue());
+            }
+
+        }
+System.exit(0);
         Job job = ac.launchJob(firstJt.getId(), "");
         System.out.println("Started job with id: " + job.getId().toString());
         System.out.println("Name: " + job.getName());
@@ -526,7 +662,7 @@ public class AnsibleClient {
                 Thread.sleep(6000);
                 jobStatus = ac.getJobStatus(job.getId());
                 System.out.println("Status: " + jobStatus);
-            } catch (AnsibleClientException ex) {
+            } catch (AnsibleTowerClientException ex) {
                 logger.debug ("Error checking job status ({}) - {}", job.getId(), ex.getMessage());
             } catch (InterruptedException ex) {
             }

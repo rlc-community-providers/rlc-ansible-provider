@@ -14,6 +14,14 @@
     <context:annotation-config/>
     <context:component-scan base-package="com.serena.rlc.provider.ansible"/>
 
+    <bean name="psaFactory" class="com.serena.rlc.provider.spi.ProviderSpecificationAwareFactoryImpl">
+        <constructor-arg value="ansible-provider-specifications.xml"/>
+    </bean>
+
+    <bean class="com.serena.rlc.provider.spi.ProviderSpecificationAware" factory-method="createProviderSpecificationAware"
+          factory-bean="psaFactory">
+    </bean>
+
     <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
         <property name="ignoreUnresolvablePlaceholders" value="true"/>
         <property name="order">
@@ -21,15 +29,17 @@
         </property>
     </bean>
 
-    <bean id="executionProvider" class="com.serena.rlc.provider.ansible.AnsibleExecutionProvider" scope="prototype">
-        <property name="providerName" value ="${execution_provider_name}"/>
-        <property name="providerDescription" value ="${execution_provider_description}"/>
-        <property name="ansibleUrl" value="${ansible_url}"/>
-        <property name="ansibleApiVersion" value="${ansible_api_version}"/>
+    <bean id="executionProvider" class="com.serena.rlc.provider.ansible.AnsibleTowerExecutionProvider" scope="prototype">
+        <!--property name="providerName" value ="${execution_provider_name}"/>
+        <property name="providerDescription" value ="${execution_provider_description}"/-->
+        <property name="ansibleTowerUrl" value="${ansible_url}"/>
+        <property name="ansibleTowerApiVersion" value="${ansible_api_version}"/>
         <property name="serviceUser" value="${ansible_serviceuser}"/>
         <property name="servicePassword" value="${ansible_servicepassword}"/>
+        <property name="projectFilter" value="${ansible_project_filter}"/>
         <property name="jobTemplateFilter" value="${ansible_job_template_filter}"/>
-        <property name="waitForCallback" value = "${execution_action_wait_for_callback}"/>
+        <property name="jobPollingInterval" value="${ansible_job_polling_interval}"/>
+        <property name="jobPollingTimeout" value="${ansible_job_polling_timeout}"/>
     </bean>
 
 </beans>
